@@ -138,10 +138,6 @@ export const Map = React.memo((props) => {
 
     }, [props.mapPosition])
 
-    useEffect(() => {
-        console.debug("mapPosition: ", props.mapPosition);
-    }, [props.mapPosition]);
-
     const onLoad = React.useCallback(function callback(map) {
         console.debug("onLoad, setting map ref");
         const bounds = new window.google.maps.LatLngBounds();
@@ -157,7 +153,7 @@ export const Map = React.memo((props) => {
 
     return  (
                 <div ref={props.forwardedRef} >
-                            <LoadScript googleMapsApiKey={process.env.GOOGLE_MAPS_API_KEY} libraries={libraries}>
+                            <LoadScript googleMapsApiKey={process.env._GOOGLE_MAPS_API_KEY} libraries={libraries}>
                                 <GoogleMap
                                     mapContainerStyle={props.mapContainerStyle}
                                     center={props.mapPosition}

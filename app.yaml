@@ -1,6 +1,6 @@
 runtime: nodejs16
 env_variables:
-  _GOOGLE_MAPS_API_KEY: "AIzaSyAljbJGLXhA_rKOXkL7OKrFwjjgKO0dVyk"
+  GOOGLE_MAPS_API_KEY: "AIzaSyAljbJGLXhA_rKOXkL7OKrFwjjgKO0dVyk"
 handlers:
   # Serve all static files with url ending with a file extension
   - url: /(.*\..+)$

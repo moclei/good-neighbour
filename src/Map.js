@@ -3,6 +3,7 @@ import {GoogleMap, GroundOverlay, LoadScript} from '@react-google-maps/api';
 import {Marker} from "react-google-maps";
 import MaskImage from "./maskblue.png";
 import './App.css';
+require('dotenv').config()
 
 const mapStyleOptions = {
     zoomControl: false,

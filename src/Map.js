@@ -1,9 +1,9 @@
-import React, {useEffect, useMemo} from 'react'
+import React, {useEffect, useMemo, useReducer, useState} from 'react'
 import {GoogleMap, GroundOverlay, LoadScript} from '@react-google-maps/api';
 import {Marker} from "react-google-maps";
 import MaskImage from "./maskblue.png";
 import './App.css';
-require('dotenv').config()
+import axios from "axios";
 
 const mapStyleOptions = {
     zoomControl: false,
@@ -128,9 +128,76 @@ const mapStyleOptions = {
 const center = {lat: 45.5234502, lng: -122.6447141};
 export const libraries = ["places"];
 
+const mapsApiKeyReducer = (state, action) => {
+    switch (action.type) {
+        case "INIT":
+            return {
+                ...state,
+                isLoading: true,
+                isError: false
+            }
+        case "SUCCESS":
+            return {
+                ...state,
+                isLoading: false,
+                isError: false,
+                data: action.payload
+            }
+        case "FAILURE":
+            return {
+                ...state,
+                isLoading: false,
+                isError: true
+            }
+        default:
+            throw new Error()
+    }
+}
+
 export const Map = React.memo((props) => {
+    const [apiKey, setApiKey] = useState(null);
+    const [state, dispatch] = useReducer(mapsApiKeyReducer, {
+        isLoading: false,
+        isError: false,
+        data: {"status":""}
+    })
+    useEffect(() => {
+        console.log("On mount")
+        const callMapsApiKey = async () => {
+            dispatch({
+                type: "INIT"
+            })
+            //good-neighbour-317413.uc.r.appspot.com
+            try {
+                const url = "https://good-neighbour-317413.uc.r.appspot.com/api/getMapsApiKey"
+                const headers = {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                }
+                const res = await axios(url)
+                console.log("Got api key---",res.data.apiKey);
+                console.debug("res: ", res);
+                dispatch({
+                    type: 'SUCCESS',
+                    payload: res.data.apiKey
+                })
+                setApiKey(res.data.apiKey)
+            }
+            catch (err) {
+                dispatch({
+                    type: 'FAILURE'
+                })
+            }
+
+        }
+        if (!apiKey) {
+            callMapsApiKey()
+        }
+
+    }, [])
+
     const overlayBounds = useMemo(() => {
-        if (props.mapPosition) {
+        if (props.mapPosition && window.google) {
             let sw = new window.google.maps.LatLng({ lat: props.mapPosition.lat - 0.0275, lng: props.mapPosition.lng - 0.0475});
             let ne = new window.google.maps.LatLng({ lat: props.mapPosition.lat + 0.0275, lng: props.mapPosition.lng + 0.0475});
             let bounds = new window.google.maps.LatLngBounds( sw, ne);
@@ -141,20 +208,24 @@ export const Map = React.memo((props) => {
 
     const onLoad = React.useCallback(function callback(map) {
         console.debug("onLoad, setting map ref");
-        const bounds = new window.google.maps.LatLngBounds();
-        map.fitBounds(bounds);
-        // setMap(map)
-        if (props.mapRef) props.mapRef.current = map;
+        if (window.google) {
+            const bounds = new window.google.maps.LatLngBounds();
+            map.fitBounds(bounds);
+            // setMap(map)
+            if (props.mapRef) props.mapRef.current = map;
+        }
+
     }, [])
 
     const onUnmount = React.useCallback(function callback(map) {
         // setMap(null)
         if (props.mapRef) props.mapRef.current = null;
     }, [])
+    if (!apiKey) return null;
 
     return  (
                 <div ref={props.forwardedRef} >
-                            <LoadScript googleMapsApiKey={process.env._GOOGLE_MAPS_API_KEY} libraries={libraries}>
+                            <LoadScript googleMapsApiKey={apiKey} libraries={libraries}>
                                 <GoogleMap
                                     mapContainerStyle={props.mapContainerStyle}
                                     center={props.mapPosition}

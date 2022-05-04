@@ -205,7 +205,7 @@ function App() {
                     <div className="details-section">
                         <div className="inner">
                             <p>Then print and deliver <span className="thisflyer">this flyer</span> to your neighbours.
-                                <img className="small" src="gnPDFsmall.jpg"/>
+                                <img className="small" src="./gnPDFsmall.jpg"/>
                             </p>
                         </div>
                     </div>

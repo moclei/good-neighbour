@@ -162,26 +162,23 @@ export const Map = React.memo((props) => {
         data: {"status":""}
     })
     useEffect(() => {
-        console.log("On mount")
         const callMapsApiKey = async () => {
             dispatch({
                 type: "INIT"
             })
-            //good-neighbour-317413.uc.r.appspot.com
             try {
-                const url = "https://good-neighbour-317413.uc.r.appspot.com/api/getMapsApiKey"
+                const url = "https://good-neighbour-nodejs-server.uc.r.appspot.com/api"
                 const headers = {
                     "Accept": "application/json",
                     "Content-Type": "application/json"
                 }
-                const res = await axios(url)
-                console.log("Got api key---",res.data.apiKey);
-                console.debug("res: ", res);
+                const res = await axios(url);
                 dispatch({
                     type: 'SUCCESS',
                     payload: res.data.apiKey
                 })
-                setApiKey(res.data.apiKey)
+                // setApiKey(res.data.apiKey)
+                setApiKey("AIzaSyAljbJGLXhA_rKOXkL7OKrFwjjgKO0dVyk");
             }
             catch (err) {
                 dispatch({
@@ -207,27 +204,26 @@ export const Map = React.memo((props) => {
     }, [props.mapPosition])
 
     const onLoad = React.useCallback(function callback(map) {
-        console.debug("onLoad, setting map ref");
         if (window.google) {
             const bounds = new window.google.maps.LatLngBounds();
             map.fitBounds(bounds);
-            // setMap(map)
             if (props.mapRef) props.mapRef.current = map;
         }
 
     }, [])
 
     const onUnmount = React.useCallback(function callback(map) {
-        // setMap(null)
         if (props.mapRef) props.mapRef.current = null;
     }, [])
-    if (!apiKey) return null;
-
+    if (!apiKey) return (
+        <div style={props.mapContainerStyle}>Loading..</div>
+    );
     return  (
                 <div ref={props.forwardedRef} >
+                    {props.loading && <div style={props.mapContainerStyle}>Loading...</div>}
                             <LoadScript googleMapsApiKey={apiKey} libraries={libraries}>
                                 <GoogleMap
-                                    mapContainerStyle={props.mapContainerStyle}
+                                    mapContainerStyle={props.loading ? {opacity: 0}: props.mapContainerStyle}
                                     center={props.mapPosition}
                                     options={mapStyleOptions}
                                     zoom={14}

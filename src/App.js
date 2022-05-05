@@ -23,6 +23,7 @@ function App() {
     const [locations, setLocations] = useState( []);
     const [infoOpen, setInfoOpen] = useState(false);
     const [info, setInfo] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     const componentRef = useRef();
     const handlePrint = useReactToPrint({
@@ -76,6 +77,7 @@ function App() {
                             // createMarkers(results);
                             placeResults = [...placeResults, ...results]
                             setLocations(placeResults);
+                            setLoading(false);
                         });
                     // createMarkers(results);
                 });
@@ -166,6 +168,7 @@ function App() {
                 mapPosition={mapPos}
                 ref={componentRef}
                 mapRef={mapRef}
+                loading={loading}
                 mapContainerStyle={{width: "700px", height: "700px"}}
                 printing={printing}
                 onMarkerClick={onMarkerClick}

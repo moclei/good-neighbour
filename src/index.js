@@ -12,12 +12,7 @@ import Print from './routes/print'
 
 ReactDOM.render(
   <React.StrictMode>
-      <BrowserRouter>
-          <Routes>
-              <Route path="/" element={<App />} />
-              <Route path="print" element={<Print />} />
-          </Routes>
-      </BrowserRouter>
+      <App />
   </React.StrictMode>,
   document.getElementById('root')
 );

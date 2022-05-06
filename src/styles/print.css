@@ -23,12 +23,19 @@ body
 
 .print-map {
     position: absolute;
-    top: 270px;
-    left: 100px;
+    top: 310px;
+    left: 140px;
     width: 500px;
     height: 500px;
 }
 
 @media print {
-    body {-webkit-print-color-adjust: exact;}
+    body {
+        -webkit-print-color-adjust: exact;
+
+    }
+    @page {
+        size: 210mm 297mm;
+        margin: 0;
+    }
 }

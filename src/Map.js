@@ -1,9 +1,8 @@
-import React, {useEffect, useMemo, useReducer, useState} from 'react'
+import React, { useMemo} from 'react'
 import {GoogleMap, GroundOverlay, LoadScript} from '@react-google-maps/api';
 import {Marker} from "react-google-maps";
 import MaskImage from "./maskblue.png";
 import './App.css';
-import axios from "axios";
 
 const mapStyleOptions = {
     zoomControl: false,
@@ -128,70 +127,8 @@ const mapStyleOptions = {
 const center = {lat: 45.5234502, lng: -122.6447141};
 export const libraries = ["places"];
 
-const mapsApiKeyReducer = (state, action) => {
-    switch (action.type) {
-        case "INIT":
-            return {
-                ...state,
-                isLoading: true,
-                isError: false
-            }
-        case "SUCCESS":
-            return {
-                ...state,
-                isLoading: false,
-                isError: false,
-                data: action.payload
-            }
-        case "FAILURE":
-            return {
-                ...state,
-                isLoading: false,
-                isError: true
-            }
-        default:
-            throw new Error()
-    }
-}
 
 export const Map = React.memo((props) => {
-    const [apiKey, setApiKey] = useState(null);
-    const [state, dispatch] = useReducer(mapsApiKeyReducer, {
-        isLoading: false,
-        isError: false,
-        data: {"status":""}
-    })
-    useEffect(() => {
-        const callMapsApiKey = async () => {
-            dispatch({
-                type: "INIT"
-            })
-            try {
-                const url = "https://good-neighbour-nodejs-server.uc.r.appspot.com/api"
-                const headers = {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                }
-                const res = await axios(url);
-                dispatch({
-                    type: 'SUCCESS',
-                    payload: res.data.apiKey
-                })
-                // setApiKey(res.data.apiKey)
-                setApiKey("AIzaSyAljbJGLXhA_rKOXkL7OKrFwjjgKO0dVyk");
-            }
-            catch (err) {
-                dispatch({
-                    type: 'FAILURE'
-                })
-            }
-
-        }
-        if (!apiKey) {
-            callMapsApiKey()
-        }
-
-    }, [])
 
     const overlayBounds = useMemo(() => {
         if (props.mapPosition && window.google) {
@@ -215,13 +152,13 @@ export const Map = React.memo((props) => {
     const onUnmount = React.useCallback(function callback(map) {
         if (props.mapRef) props.mapRef.current = null;
     }, [])
-    if (!apiKey) return (
+    if (!props.apiKey) return (
         <div style={props.mapContainerStyle}>Loading..</div>
     );
     return  (
                 <div ref={props.forwardedRef} >
                     {props.loading && <div style={props.mapContainerStyle}>Loading...</div>}
-                            <LoadScript googleMapsApiKey={apiKey} libraries={libraries}>
+                            <LoadScript googleMapsApiKey={props.apiKey} libraries={libraries}>
                                 <GoogleMap
                                     mapContainerStyle={props.loading ? {opacity: 0}: props.mapContainerStyle}
                                     center={props.mapPosition}
@@ -236,7 +173,7 @@ export const Map = React.memo((props) => {
                                         url={MaskImage}
                                         bounds={overlayBounds }
                                     /> : props.mapPosition && props.customGroundOverlay ? props.customGroundOverlay() : null}
-                                    <Marker position={{ lat: -34.397, lng: 150.644 }} onClick={props.onMarkerClick} />
+                                    <Marker position={{ lat: -34.397, lng: 150.644 }}  />
                                     {props.renderInfoWindow && props.renderInfoWindow()}
                                     {props.renderMarkers()}
                                 </GoogleMap>

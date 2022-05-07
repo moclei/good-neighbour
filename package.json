@@ -17,6 +17,7 @@
     "react-router-dom": "^6.2.2",
     "react-scripts": "5.0.0",
     "react-spinners": "^0.11.0",
+    "react-timer-hook": "^3.0.5",
     "react-to-print": "^2.14.4",
     "recompose": "^0.30.0",
     "use-react-screenshot": "^3.0.0",

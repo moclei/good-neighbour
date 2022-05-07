@@ -1,11 +1,12 @@
 import React, {useEffect, useMemo, useState} from "react";
 import '../styles/print.css';
 import {useLocation, useNavigate} from "react-router-dom";
+import {useTimer} from "react-timer-hook";
 
 export default function Print(props) {
+    const [bgLoaded, setBgLoaded] = useState(false);
+    const [imageLoaded, setImageLoaded] = useState(false);
     const navigate = useNavigate();
-    const [mapImage, setMapImage] = useState(null);
-    const [locationsStr, setLocationsStr] = useState(null);
     let location = useLocation();
     useEffect(() => {
         // initiate the event handler
@@ -22,22 +23,30 @@ export default function Print(props) {
         }
     })
     const urlParams = useMemo(() => {
-            console.debug("Print.js, location: ", location);
         const search = location.search? location.search.substr(1, location.search.length -1) : "";
         if (search && search.length > 0) {
             const parsedLocation = JSON.parse('{"' + search.replace(/&/g, '","').replace(/=/g,'":"') + '"}', function(key, value) { return key===""?value:decodeURIComponent(value) });
-            setLocationsStr(parsedLocation.markers);
             return parsedLocation;
         }
         else return {name: "test", phone: "123"};
     }, [location])
 
     const onImageLoad = () => {
-        window.print();
+
+        setImageLoaded(true);
     }
+    const onBGLoad = () => {
+        setBgLoaded(true);
+    }
+    useEffect(() => {
+        if (imageLoaded && bgLoaded) {
+            window.print();
+        }
+    }, [imageLoaded, bgLoaded])
     return (
         <div className={"print-container"}>
             <div className={"print-image"}>
+                <img src={"../gnPDF.jpeg"} style={{opacity: 1}} onLoad={onBGLoad} width={50} height={50}/>
                 <div className={"print-map"}>
                         <div >
                             <img src={location.state.image}

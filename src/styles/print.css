@@ -16,7 +16,7 @@ body
     height: 1120px;
 }
 .print-image {
-    background-image: url("../gnPDF.jpeg");
+   background-image: url("../gnPDF.jpeg");
     width: 950px;
     background-size: cover;
 }

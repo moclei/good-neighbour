@@ -245,9 +245,6 @@ function Home(props) {
                             <div className={"details-item"}>
                                 Phone: {user && user.phone || ""}
                             </div>
-                            <div>
-                                markers loaded: {markersRendered ? "true" : "false"}
-                            </div>
                             <input
                                 type="button"
                                 className={`print-button ${printEnabled ? '' : 'print-button-disabled'}`}

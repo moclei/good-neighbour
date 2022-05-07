@@ -1,6 +1,6 @@
-import React, { useMemo} from 'react'
+import React, {useEffect, useMemo, useState} from 'react'
 import {GoogleMap, GroundOverlay, LoadScript} from '@react-google-maps/api';
-import {Marker} from "react-google-maps";
+import ClipLoader from "react-spinners/ClipLoader";
 import MaskImage from "./maskblue.png";
 import './App.css';
 
@@ -130,24 +130,37 @@ export const libraries = ["places"];
 
 export const Map = React.memo((props) => {
 
+    const [mapLoaded, setMapLoaded] = useState(false);
+    const [tilesLoaded, setTilesLoaded]= useState(false);
     const overlayBounds = useMemo(() => {
+        let bounds = null;
         if (props.mapPosition && window.google) {
             let sw = new window.google.maps.LatLng({ lat: props.mapPosition.lat - 0.0275, lng: props.mapPosition.lng - 0.0475});
             let ne = new window.google.maps.LatLng({ lat: props.mapPosition.lat + 0.0275, lng: props.mapPosition.lng + 0.0475});
-            let bounds = new window.google.maps.LatLngBounds( sw, ne);
-            return bounds;
-        } else return null;
-
+            bounds = new window.google.maps.LatLngBounds( sw, ne);
+        }
+        return bounds;
     }, [props.mapPosition])
+
 
     const onLoad = React.useCallback(function callback(map) {
         if (window.google) {
             const bounds = new window.google.maps.LatLngBounds();
             map.fitBounds(bounds);
+            setMapLoaded(true);
             if (props.mapRef) props.mapRef.current = map;
         }
-
     }, [])
+
+    const onTilesLoad = () => {
+        setTilesLoaded(true);
+    }
+
+    useEffect(() => {
+        if (tilesLoaded && mapLoaded) {
+            props.onLoaded();
+        }
+    }, [tilesLoaded, mapLoaded])
 
     const onUnmount = React.useCallback(function callback(map) {
         if (props.mapRef) props.mapRef.current = null;
@@ -157,7 +170,18 @@ export const Map = React.memo((props) => {
     );
     return  (
                 <div ref={props.forwardedRef} >
-                    {props.loading && <div style={props.mapContainerStyle}>Loading...</div>}
+                    {props.loading &&
+                        <div style={{
+                            width: "700px",
+                            height: "700px",
+                            display: "flex",
+                            flex: 1,
+                            alignItems: "center",
+                            justifyContent: "center"
+                        }}>
+                            <ClipLoader color={"#36A1D4"} loading={props.loading} size={150} />
+                        </div>
+                    }
                             <LoadScript googleMapsApiKey={props.apiKey} libraries={libraries}>
                                 <GoogleMap
                                     mapContainerStyle={props.loading ? {opacity: 0}: props.mapContainerStyle}
@@ -166,14 +190,14 @@ export const Map = React.memo((props) => {
                                     zoom={14}
                                     defaultZoom={14}
                                     onLoad={onLoad}
+                                    onTilesLoaded={onTilesLoad}
                                     onUnmount={onUnmount}
                                 >
-                                    {props.mapPosition && !props.customGroundOverlay ? <GroundOverlay
+                                    {props.mapPosition && !props.customGroundOverlay && overlayBounds && <GroundOverlay
                                         key={'url'}
                                         url={MaskImage}
                                         bounds={overlayBounds }
-                                    /> : props.mapPosition && props.customGroundOverlay ? props.customGroundOverlay() : null}
-                                    <Marker position={{ lat: -34.397, lng: 150.644 }}  />
+                                    />}
                                     {props.renderInfoWindow && props.renderInfoWindow()}
                                     {props.renderMarkers()}
                                 </GoogleMap>

@@ -1,30 +1,57 @@
 import './App.css';
-import React, {useState, useEffect, useCallback, useRef} from "react";
-import { Marker, InfoWindow } from '@react-google-maps/api';
+import React, {useState, useEffect, useCallback, useRef, createRef} from "react";
+import { Marker, InfoWindow, OverlayView } from '@react-google-maps/api';
 import Map from "./Map";
 import LogoImage from "./logo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import {useHtml2Canvas} from "./hooks/useHtml2Canvas";
+import {usePosition} from "./hooks/usePosition";
 
 function Home(props) {
-
+    const navigate = useNavigate();
+    const {
+        latitude,
+        longitude,
+        error,
+    } = usePosition();
     const mapRef = useRef(null);
     const [user, setUser] = useState( null);
-    const [locationsStr, setLocationsStr] = useState(null);
     const [printEnabled, setPrintEnabled] = useState( false);
     const [locations, setLocations] = useState( []);
     const [infoOpen, setInfoOpen] = useState(false);
     const [info, setInfo] = useState(null);
     const [loading, setLoading] = useState(true);
+    const ref = createRef();
+    const [image, takeScreenshot] = useHtml2Canvas({type: "image/jpeg", quality: 0.8});
+    const [markersRendered, setMarkersRendered] = useState(false);
+    const [mapLoaded, setMapLoaded] = useState(false);
+    const [mapPos, setMapPos] = useState(null);
+
+    useEffect(() => {
+        if (latitude && longitude) {
+            setMapPos({lat: latitude, lng: longitude});
+        }
+    }, [latitude, longitude]);
+
+    const getImage = () => {
+        takeScreenshot(ref.current);
+    }
+
+    useEffect(() => {
+        if (markersRendered && mapLoaded) {
+            getImage();
+        }
+    }, [mapLoaded, markersRendered]);
 
     const componentRef = useRef();
     useEffect(() => {
-        if (mapRef && mapRef.current && props.mapPos) {
+        if (mapRef && mapRef.current && mapPos) {
             mapRef.current.setZoom(14);
             let service = new window.google.maps.places.PlacesService(mapRef.current);
             let placeResults = [];
             service.nearbySearch(
                 {
-                    location: props.mapPos,
+                    location: mapPos,
                     radius: 1000,
                     keyword: ['park']
                 },
@@ -36,7 +63,7 @@ function Home(props) {
                     placeResults = [...results];
                     service.nearbySearch(
                         {
-                            location: props.mapPos,
+                            location: mapPos,
                             radius: 1000,
                             keyword: ['landmark']
                         },
@@ -52,13 +79,13 @@ function Home(props) {
                                 let loc = placeResults[i];
                                 locStr += `|${loc.geometry.location.lat()},${loc.geometry.location.lng()}`
                             }
-                            setLocationsStr(locStr);
+                            // setLocationsStr(locStr);
                             setLoading(false);
                         });
                 });
 
         }
-    }, [mapRef, mapRef.current, props.mapPos]);
+    }, [mapRef, mapRef.current, mapPos]);
 
 
     const onPlaceClick = (place) => {
@@ -71,40 +98,56 @@ function Home(props) {
         setInfoOpen(false);
     }
 
+    const getPixelPositionOffset = (width, height) => ({
+        x: -(width / 2),
+        y: -(height / 2)
+    });
+
     const renderMarkers = useCallback(() => {
         if (locations) {
-            return (
+            const markers = (
                 <div>
                     {locations.map(place => {
                         return (
-                            <Marker
-                                position={new window.google.maps.LatLng({lat: place.geometry.location.lat(), lng: place.geometry.location.lng()})}
-                                onClick={() => onPlaceClick(place)}
-                            />
+                            <div>
+                                {/*<InfoWindow
+                                    position={new window.google.maps.LatLng({lat: place.geometry.location.lat(), lng: place.geometry.location.lng()})}
+                                    onCloseClick={onInfoClose}
+                                    options={{pixelOffset: new window.google.maps.Size(0,-40)}}
+                                >
+                                    <div>
+                                        {place.name}
+                                    </div>
+                                </InfoWindow>*/}
+                                {/*<Marker
+                                    position={new window.google.maps.LatLng({lat: place.geometry.location.lat(), lng: place.geometry.location.lng()})}
+                                    onClick={() => onPlaceClick(place)}
+                                />*/}
+                                <OverlayView
+                                    position={new window.google.maps.LatLng({lat: place.geometry.location.lat(), lng: place.geometry.location.lng()})}
+                                    mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                                    getPixelPositionOffset={getPixelPositionOffset}
+                                >
+                                    <div>
+                                        <div class="popup-bubble">
+                                            {place.name}
+                                        </div>
+                                        <div class="popup-bubble-anchor" />
+                                    </div>
+                                </OverlayView>
+                            </div>
                         )
                     })
                     }
                 </div>
             )
-        } else return null;
+            setMarkersRendered(true);
+            return markers;
+        } else {
+            setMarkersRendered(false)
+            return null;
+        }
     }, [locations])
-
-    const renderInfoWindow = () => {
-        if (infoOpen && info) {
-            return (
-                <InfoWindow
-                    position={new window.google.maps.LatLng({lat: info.geometry.location.lat(), lng: info.geometry.location.lng()})}
-                    onCloseClick={onInfoClose}
-                    options={{pixelOffset: new window.google.maps.Size(0,-40)}}
-                >
-                    <div>
-                        <div>{info.name}</div>
-                    </div>
-                </InfoWindow>
-            )
-        } else return null;
-
-    };
 
     const onInputChange = (evt, type) => {
         if (evt) {
@@ -124,6 +167,19 @@ function Home(props) {
         }
     }
 
+    const goToPrint = () => {
+        navigate( "/print",
+            {
+            state: {
+                    phone: user?.phone,
+                    name: user?.name,
+                    image: image
+                }
+        });
+    }
+    const onLoaded = () => {
+        setMapLoaded(true);
+    }
     return (
         <div className="App">
             <header className="App-header">
@@ -132,15 +188,15 @@ function Home(props) {
                 </div>
             </header>
             <div className="page">
-                <div style={{maxWidth: "700px"}}>
+                <div style={{maxWidth: "700px"}} ref={ref}>
                     <Map
                         onInfoClose={onInfoClose}
-                        mapPosition={props.mapPos}
+                        mapPosition={mapPos}
                         ref={componentRef}
                         mapRef={mapRef}
                         loading={loading}
+                        onLoaded={onLoaded}
                         mapContainerStyle={{width: "700px", height: "700px"}}
-                        renderInfoWindow={renderInfoWindow}
                         apiKey={props.apiKey}
                         renderMarkers={renderMarkers}
                     />
@@ -189,21 +245,24 @@ function Home(props) {
                             <div className={"details-item"}>
                                 Phone: {user && user.phone || ""}
                             </div>
-                            <Link
+                            <div>
+                                markers loaded: {markersRendered ? "true" : "false"}
+                            </div>
+                            <input
+                                type="button"
+                                className={`print-button ${printEnabled ? '' : 'print-button-disabled'}`}
+                                onClick={goToPrint}
+                                id="printButton"
+                                value="Print Flyer"/>
+                            {/*<Link
                                 className={`print-button ${printEnabled ? '' : 'print-button-disabled'}`}
                                 target="_blank"
                                 to={{
                                     pathname: "/print",
                                     search: `?name=${user?.name}&phone=${user?.phone}&markers=${locationsStr}`,
-                                }}>Print Flyer</Link>
+                                }}>Print Flyer</Link>*/}
                         </div>
-                        {/*<input
-                        type="button"
-                        className="pdf"
-                        onClick={onPrintClick}
-                        id="printButton"
-                        disabled={!printEnabled}
-                        value="Print Flyer"/>*/}
+
                     </form>
                 </section>
             </div>

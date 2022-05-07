@@ -1,4 +1,4 @@
-import React, {useEffect, useReducer, useState} from "react";
+import React, {useCallback, useEffect, useReducer, useState} from "react";
 import {
     Routes,
     Route, BrowserRouter,
@@ -34,28 +34,19 @@ const mapsApiKeyReducer = (state, action) => {
     }
 }
 
-export default function App() {
-    const {
-        latitude,
-        longitude,
-        error,
-    } = usePosition();
+export default function App(props) {
+
     const [state, dispatch] = useReducer(mapsApiKeyReducer, {
         isLoading: false,
         isError: false,
         data: {"status":""}
     })
-    const [mapPos, setMapPos] = useState(null);
+
     const [apiKey, setApiKey] = useState(null);
-    useEffect(() => {
-        if (latitude && longitude) {
-            setMapPos({lat: latitude, lng: longitude});
-        }
-    }, [latitude, longitude]);
 
     useEffect(() => {
         const callMapsApiKey = async () => {
-            console.debug("process.env.NODE_ENV: ", process.env.NODE_ENV);
+            // console.debug("process.env.NODE_ENV: ", process.env.NODE_ENV);
             if (process.env.NODE_ENV === "production") {
                 dispatch({
                     type: "INIT"
@@ -92,8 +83,8 @@ export default function App() {
     return (
         <BrowserRouter>
                 <Routes>
-                    <Route exact path="/" element={<Home apiKey={apiKey} mapPos={mapPos}/>}/>
-                    <Route exact path="/print" element={<Print apiKey={apiKey} mapPos={mapPos}/>}/>
+                    <Route exact path="/" element={<Home apiKey={apiKey} />}/>
+                    <Route exact path="/print" element={<Print apiKey={apiKey} />}/>
                 </Routes>
         </BrowserRouter>
     );

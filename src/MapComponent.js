@@ -277,7 +277,6 @@ export default compose(
         center={props.mapPosition}
         ref={ref => props.mapRef.current = ref}
         onLoad={map => {
-            console.debug("map loaded, map: ", map);
             props.setMapRef(map);
         }}
         onBoundsChanged={props.setSearchBoxBounds}

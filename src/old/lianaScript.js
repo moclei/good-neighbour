@@ -174,7 +174,6 @@ let smallerBounds;
 function initMap() {
     // Create the map.
     // let homeCoords = {lat: 53.3498123, lng: -6.2624435};
-    console.debug("initMap");
     Popup = createPopupClass();
     const centerCoords = {lat: 53.3498123, lng: -6.2624435};
     var styledMapType = new google.maps.StyledMapType(
@@ -389,7 +388,6 @@ function initMap() {
 
     function getPlaces(pos) {
         let service = new google.maps.places.PlacesService(map);
-        console.debug("getPlaces");
         /*let getNextPage = null;
         let moreButton = document.getElementById('more');
         moreButton.onclick = function () {

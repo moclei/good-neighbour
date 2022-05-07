@@ -1,25 +1,43 @@
-import logo from './logo.svg';
-import './App.css';
+import React, {useEffect, useState} from "react";
+import {
+    Routes,
+    Route, BrowserRouter,
+} from "react-router-dom";
+import Print from "./routes/print";
+import Home from "./Home";
+import axios from "axios";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+export default function App() {
 
-export default App;
+    const [apiKey, setApiKey] = useState(null);
+
+    useEffect(() => {
+        const callMapsApiKey = async () => {
+            // console.debug("process.env.NODE_ENV: ", process.env.NODE_ENV);
+            if (process.env.NODE_ENV === "production") {
+                try {
+                    const url = "https://good-neighbour-nodejs-server.uc.r.appspot.com/api"
+                    const res = await axios(url);
+                    setApiKey(res.data.apiKey);
+                } catch (e) {
+                    console.error("error getting/setting apiKey, ", e)
+                }
+            } else {
+                setApiKey(process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
+            }
+        }
+        if (!apiKey) {
+            callMapsApiKey()
+        }
+
+    }, []);
+
+    return (
+        <BrowserRouter>
+                <Routes>
+                    <Route exact path="/" element={<Home apiKey={apiKey} />}/>
+                    <Route exact path="/print" element={<Print apiKey={apiKey} />}/>
+                </Routes>
+        </BrowserRouter>
+    );
+};

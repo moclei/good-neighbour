@@ -124,12 +124,9 @@ const mapStyleOptions = {
         }]
 };
 
-const center = {lat: 45.5234502, lng: -122.6447141};
 export const libraries = ["places"];
 
-
 export const Map = React.memo((props) => {
-
     const [mapLoaded, setMapLoaded] = useState(false);
     const [tilesLoaded, setTilesLoaded]= useState(false);
     const overlayBounds = useMemo(() => {
@@ -151,11 +148,9 @@ export const Map = React.memo((props) => {
             if (props.mapRef) props.mapRef.current = map;
         }
     }, [])
-
     const onTilesLoad = () => {
         setTilesLoaded(true);
     }
-
     useEffect(() => {
         if (tilesLoaded && mapLoaded) {
             props.onLoaded();
